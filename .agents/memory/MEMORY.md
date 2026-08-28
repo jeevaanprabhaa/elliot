@@ -1,0 +1,1 @@
+- [Safe imported-repo publishing](imported-repo-publishing.md) — sanitize tracked environment files and generated dependencies before creating a public snapshot.

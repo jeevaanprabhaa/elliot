@@ -17,6 +17,16 @@ const asDate = (value) => {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 };
 
+const cityCoordinates = {
+  ahmedabad: { lat: 23.0225, lng: 72.5714 },
+  mumbai: { lat: 19.076, lng: 72.8777 },
+  delhi: { lat: 28.6139, lng: 77.209 },
+  bengaluru: { lat: 12.9716, lng: 77.5946 },
+  pune: { lat: 18.5204, lng: 73.8567 },
+  chennai: { lat: 13.0827, lng: 80.2707 },
+  kolkata: { lat: 22.5726, lng: 88.3639 },
+};
+
 const normaliseDonor = (data) => ({
   _id: createId('donor'),
   name: String(data.name || '').trim(),
@@ -28,6 +38,9 @@ const normaliseDonor = (data) => ({
   availabilitySlots: Array.isArray(data.availabilitySlots) ? data.availabilitySlots : [],
   lastDonatedAt: data.lastDonatedAt ? asDate(data.lastDonatedAt) : undefined,
   donationHistory: Array.isArray(data.donationHistory) ? data.donationHistory : [],
+  responseHistory: Array.isArray(data.responseHistory) ? data.responseHistory : [],
+  responseRate: Number.isFinite(Number(data.responseRate)) ? Number(data.responseRate) : undefined,
+  successfulResponses: Number.isFinite(Number(data.successfulResponses)) ? Number(data.successfulResponses) : undefined,
   allowCall: Boolean(data.allowCall),
   createdAt: now(),
   updatedAt: now(),
@@ -138,6 +151,234 @@ app.delete('/api/donors/:id', (req, res) => {
   donors.splice(index, 1);
   res.json({ success: true });
 });
+
+const recipientCompatibility = {
+  'O-': ['O-'],
+  'O+': ['O-', 'O+'],
+  'A-': ['O-', 'A-'],
+  'A+': ['O-', 'O+', 'A-', 'A+'],
+  'B-': ['O-', 'B-'],
+  'B+': ['O-', 'O+', 'B-', 'B+'],
+  'AB-': ['O-', 'A-', 'B-', 'AB-'],
+  'AB+': ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'],
+};
+
+const clampScore = (value) => Math.min(Math.max(value, 0), 1);
+const toFiniteNumber = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+};
+
+const getRecordCoordinates = (record) => {
+  const coordinates = record?.coordinates;
+  if (toFiniteNumber(coordinates?.lat) !== null && toFiniteNumber(coordinates?.lng) !== null) {
+    return { lat: Number(coordinates.lat), lng: Number(coordinates.lng) };
+  }
+  const city = String(record?.city || '').trim().toLowerCase();
+  return cityCoordinates[city] || null;
+};
+
+const haversineKm = (from, to) => {
+  if (!from || !to) return null;
+  const toRadians = (value) => (value * Math.PI) / 180;
+  const earthRadiusKm = 6371;
+  const latitudeDelta = toRadians(to.lat - from.lat);
+  const longitudeDelta = toRadians(to.lng - from.lng);
+  const fromLatitude = toRadians(from.lat);
+  const toLatitude = toRadians(to.lat);
+  const a = Math.sin(latitudeDelta / 2) ** 2
+    + Math.cos(fromLatitude) * Math.cos(toLatitude) * Math.sin(longitudeDelta / 2) ** 2;
+  return Math.round(earthRadiusKm * 2 * Math.asin(Math.min(1, Math.sqrt(a))) * 10) / 10;
+};
+
+const getDonationGapDays = (componentType) => componentType === 'platelets' ? 7 : 90;
+
+const getEligibility = (donor, request) => {
+  if (!donor.lastDonatedAt) {
+    return { eligibleNow: true, daysSinceLastDonation: null, nextEligibleAt: null };
+  }
+
+  const lastDonation = new Date(donor.lastDonatedAt);
+  if (Number.isNaN(lastDonation.getTime())) {
+    return { eligibleNow: true, daysSinceLastDonation: null, nextEligibleAt: null };
+  }
+
+  const neededAt = new Date(request.neededBy);
+  const comparisonTime = Number.isNaN(neededAt.getTime()) ? new Date() : neededAt;
+  const nextEligibleAt = new Date(lastDonation);
+  nextEligibleAt.setDate(nextEligibleAt.getDate() + getDonationGapDays(request.componentType));
+  const daysSinceLastDonation = Math.floor((comparisonTime.getTime() - lastDonation.getTime()) / (1000 * 60 * 60 * 24));
+
+  return {
+    eligibleNow: nextEligibleAt <= comparisonTime,
+    daysSinceLastDonation: Math.max(daysSinceLastDonation, 0),
+    nextEligibleAt: nextEligibleAt.toISOString(),
+  };
+};
+
+const getAvailability = (donor, request) => {
+  const availability = String(donor.availability || 'Available').trim().toLowerCase();
+  const requestTime = new Date(request.neededBy);
+  const targetTime = Number.isNaN(requestTime.getTime()) ? new Date() : requestTime;
+  const unavailable = ['unavailable', 'not available', 'paused', 'offline', 'busy'].some((value) => availability.includes(value));
+
+  if (unavailable) {
+    return { availableAtRequest: false, score: 0.05, label: 'Unavailable', detail: 'Marked unavailable in donor profile' };
+  }
+
+  if (Array.isArray(donor.availabilitySlots) && donor.availabilitySlots.length > 0) {
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const day = dayNames[targetTime.getDay()];
+    const minutes = targetTime.getHours() * 60 + targetTime.getMinutes();
+    const matchesSlot = donor.availabilitySlots.some((slot) => {
+      if (slot.day !== day) return false;
+      const [startHour, startMinute] = String(slot.startTime || '00:00').split(':').map(Number);
+      const [endHour, endMinute] = String(slot.endTime || '23:59').split(':').map(Number);
+      const start = startHour * 60 + startMinute;
+      const end = endHour * 60 + endMinute;
+      return Number.isFinite(start) && Number.isFinite(end) && minutes >= start && minutes <= end;
+    });
+
+    return matchesSlot
+      ? { availableAtRequest: true, score: 1, label: 'Available', detail: `Scheduled for ${day} at the requested time` }
+      : { availableAtRequest: false, score: 0.35, label: 'Scheduled', detail: 'No matching availability slot for the requested time' };
+  }
+
+  if (availability.includes('on-call') || availability.includes('on call')) {
+    return { availableAtRequest: true, score: 0.85, label: 'On-call', detail: 'Donor is marked on-call' };
+  }
+  if (availability.includes('available') || availability.includes('ready') || availability.includes('always')) {
+    return { availableAtRequest: true, score: 1, label: 'Available', detail: 'Donor is marked available' };
+  }
+  return { availableAtRequest: false, score: 0.5, label: 'Confirm', detail: 'Availability needs confirmation' };
+};
+
+const getReliability = (donor) => {
+  const history = Array.isArray(donor.responseHistory) ? donor.responseHistory : [];
+  const explicitRate = toFiniteNumber(donor.responseRate);
+  if (explicitRate !== null) {
+    const score = explicitRate > 1 ? explicitRate / 100 : explicitRate;
+    const boundedScore = clampScore(score);
+    return {
+      score: boundedScore,
+      percent: Math.round(boundedScore * 100),
+      label: boundedScore >= 0.75 ? 'High' : boundedScore >= 0.5 ? 'Moderate' : 'Low',
+      detail: 'Based on recorded response rate',
+    };
+  }
+
+  if (history.length > 0) {
+    const responded = history.filter((entry) => entry?.responded === true || entry?.accepted === true || entry?.status === 'responded' || entry?.status === 'accepted').length;
+    const score = responded / history.length;
+    return {
+      score,
+      percent: Math.round(score * 100),
+      label: score >= 0.75 ? 'High' : score >= 0.5 ? 'Moderate' : 'Low',
+      detail: `${responded} of ${history.length} previous requests received a response`,
+    };
+  }
+
+  const successfulResponses = toFiniteNumber(donor.successfulResponses);
+  if (successfulResponses !== null) {
+    const score = clampScore(successfulResponses / Math.max(successfulResponses + 1, 1));
+    return {
+      score,
+      percent: Math.round(score * 100),
+      label: score >= 0.75 ? 'High' : score >= 0.5 ? 'Moderate' : 'Low',
+      detail: `${successfulResponses} successful previous response(s) recorded`,
+    };
+  }
+
+  return {
+    score: 0.5,
+    percent: 50,
+    label: 'New',
+    detail: 'No previous response history recorded yet',
+  };
+};
+
+const buildDonorMatches = (request) => {
+  const compatibleGroups = recipientCompatibility[request.bloodGroup] || [];
+  const requestCoordinates = getRecordCoordinates(request);
+
+  const matches = donors
+    .map((donor) => {
+      const isExactGroup = donor.bloodGroup === request.bloodGroup;
+      const isCompatible = compatibleGroups.includes(donor.bloodGroup);
+      const eligibility = getEligibility(donor, request);
+      const availability = getAvailability(donor, request);
+      const distanceKm = haversineKm(requestCoordinates, getRecordCoordinates(donor));
+      const distanceScore = distanceKm === null ? 0.5 : clampScore(1 - distanceKm / 50);
+      const reliability = getReliability(donor);
+      const compatibilityScore = isExactGroup ? 1 : isCompatible ? 0.8 : 0;
+      const matchScore = Math.round(
+        compatibilityScore * 30
+        + (eligibility.eligibleNow ? 1 : 0) * 25
+        + distanceScore * 20
+        + availability.score * 15
+        + reliability.score * 10,
+      );
+
+      return {
+        donor: {
+          _id: donor._id,
+          name: donor.name,
+          bloodGroup: donor.bloodGroup,
+          city: donor.city,
+          phone: donor.allowCall ? donor.phone : undefined,
+          allowCall: donor.allowCall,
+        },
+        matchScore,
+        distanceKm,
+        eligibility,
+        availability,
+        reliability,
+        reasons: [
+          {
+            key: 'compatible',
+            label: 'Compatible',
+            passed: isCompatible,
+            detail: isExactGroup
+              ? `Exact ${request.bloodGroup} match`
+              : isCompatible
+                ? `${donor.bloodGroup} is compatible with ${request.bloodGroup}`
+                : `${donor.bloodGroup} is not compatible with ${request.bloodGroup}`,
+          },
+          {
+            key: 'eligible',
+            label: 'Eligible',
+            passed: eligibility.eligibleNow,
+            detail: eligibility.eligibleNow
+              ? `Donation gap met (${getDonationGapDays(request.componentType)} days)`
+              : `Next eligible ${new Date(eligibility.nextEligibleAt).toLocaleDateString()}`,
+          },
+          {
+            key: 'nearby',
+            label: 'Nearby',
+            passed: distanceKm !== null && distanceKm <= 50,
+            detail: distanceKm === null ? 'Distance unavailable; confirm location' : `${distanceKm} km from ${request.city}`,
+          },
+          {
+            key: 'available',
+            label: 'Available',
+            passed: availability.availableAtRequest,
+            detail: availability.detail,
+          },
+          {
+            key: 'reliable',
+            label: 'Reliable',
+            passed: reliability.score >= 0.6,
+            detail: reliability.detail,
+          },
+        ],
+      };
+    })
+    .filter((match) => match.reasons.find((reason) => reason.key === 'compatible')?.passed && match.eligibility.eligibleNow)
+    .sort((a, b) => b.matchScore - a.matchScore || (a.distanceKm ?? 1e9) - (b.distanceKm ?? 1e9))
+    .map((match, index) => ({ ...match, rank: index + 1 }));
+
+  return matches;
+};
 
 // Elliott prototype prediction engine.
 // These inventory, consumption, and scheduled-demand values intentionally act as
@@ -325,6 +566,42 @@ app.get('/api/requests', (req, res) => {
     .slice(0, 200);
 
   res.json(result);
+});
+
+app.get('/api/requests/:id/matches', (req, res) => {
+  const request = requests.find((item) => item._id === req.params.id);
+  if (!request) return res.status(404).json({ error: 'request not found' });
+
+  const matches = buildDonorMatches(request);
+  res.json({
+    label: 'ELLIOT SMART DONOR MATCHING',
+    demo: true,
+    generatedAt: now(),
+    request: {
+      _id: request._id,
+      bloodGroup: request.bloodGroup,
+      componentType: request.componentType,
+      city: request.city,
+      hospital: request.hospital,
+      units: request.units,
+      neededBy: request.neededBy,
+      urgency: request.urgency,
+    },
+    summary: {
+      donorsChecked: donors.length,
+      compatibleEligible: matches.length,
+      availableNow: matches.filter((match) => match.availability.availableAtRequest).length,
+      exactGroupMatches: matches.filter((match) => match.donor.bloodGroup === request.bloodGroup).length,
+    },
+    scoring: {
+      compatibleBloodGroup: '30%',
+      eligibilityAndDonationGap: '25%',
+      distance: '20%',
+      availability: '15%',
+      reliabilityAndPreviousResponse: '10%',
+    },
+    matches,
+  });
 });
 
 app.post('/api/requests', (req, res) => {

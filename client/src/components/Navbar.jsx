@@ -74,6 +74,7 @@ function Navbar() {
             Requests
             {requestsCount > 0 && <span>{requestsCount}</span>}
           </button>
+          <button onClick={() => navigate("/hospital-dashboard")}>Hospital AI</button>
         </div>
 
         <div className="bc-nav-actions">
@@ -102,6 +103,7 @@ function Navbar() {
             </button>
           ))}
           <button onClick={() => { setMenuOpen(false); navigate("/search"); }}>Find a donor</button>
+          <button onClick={() => { setMenuOpen(false); navigate("/hospital-dashboard"); }}>Hospital AI</button>
           <button onClick={() => { setMenuOpen(false); navigate("/register"); }}>Register <FaArrowRight /></button>
         </div>
       )}

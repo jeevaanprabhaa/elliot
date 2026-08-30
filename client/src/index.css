@@ -1,9 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 html, body, #root { height: 100%; }
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
 
 body {
   margin: 0;
@@ -117,6 +117,93 @@ button { cursor: pointer; }
 .bc-nav-register svg { font-size: .62rem; }
 .bc-mobile-toggle, .bc-mobile-menu { display: none; }
 
+.elliot-shell { min-height: 100vh; padding: 112px 24px 72px; background: linear-gradient(135deg, #fffafa 0%, #fff5f5 48%, #f4eef4 100%); color: #202733; }
+.elliot-container { max-width: 1240px; margin: 0 auto; }
+.elliot-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
+.elliot-kicker, .elliot-panel-kicker { display: flex; align-items: center; gap: 8px; color: #bd4355; font-size: .68rem; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+.elliot-header h1 { margin-top: 12px; color: #202733; font-family: 'Manrope', sans-serif; font-size: clamp(2.1rem, 4vw, 3.5rem); font-weight: 800; letter-spacing: -.06em; line-height: 1; }
+.elliot-header p { max-width: 580px; margin-top: 13px; color: #777982; font-size: .92rem; }
+.elliot-header-actions { display: flex; align-items: center; gap: 10px; }
+.elliot-prototype-pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 9px 12px; background: #fff0d7; color: #9b681c; font-size: .66rem; font-weight: 800; letter-spacing: .04em; }
+.elliot-refresh { display: inline-flex; align-items: center; gap: 7px; border: 1px solid #e7c9cc; border-radius: 999px; padding: 9px 13px; background: white; color: #bd4355; font-size: .72rem; font-weight: 700; }
+.elliot-demo-note { display: flex; align-items: flex-start; gap: 12px; margin-top: 29px; border: 1px solid #f2d79d; border-radius: 16px; padding: 15px 18px; background: rgba(255, 249, 231, .8); color: #8a6429; }
+.elliot-demo-note > svg { flex: 0 0 auto; margin-top: 2px; font-size: 1rem; }
+.elliot-demo-note strong, .elliot-demo-note span { display: block; }
+.elliot-demo-note strong { font-size: .78rem; }
+.elliot-demo-note span { margin-top: 4px; color: #94774a; font-size: .73rem; line-height: 1.5; }
+.elliot-summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 13px; margin-top: 18px; }
+.elliot-summary-card { display: flex; align-items: center; gap: 12px; border: 1px solid #efdfe0; border-radius: 17px; padding: 17px; background: rgba(255,255,255,.86); }
+.elliot-summary-card small, .elliot-summary-card strong { display: block; }
+.elliot-summary-card small { color: #92939b; font-size: .67rem; }
+.elliot-summary-card strong { margin-top: 4px; color: #242b36; font-family: 'Manrope', sans-serif; font-size: 1.35rem; }
+.elliot-summary-icon { display: inline-flex; align-items: center; justify-content: center; width: 37px; height: 37px; border-radius: 12px; font-size: .85rem; }
+.elliot-summary-icon-stock { background: #eaf6f1; color: #30906e; }
+.elliot-summary-icon-risk { background: #fff3dd; color: #bf832e; }
+.elliot-summary-icon-critical { background: #fce7ea; color: #c44356; }
+.elliot-summary-icon-live { background: #efeaf4; color: #8c7096; }
+.elliot-content-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 18px; margin-top: 18px; }
+.elliot-panel, .elliot-data-sources { border: 1px solid #efdedf; border-radius: 20px; background: rgba(255,255,255,.9); box-shadow: 0 12px 30px rgba(105, 53, 61, .05); }
+.elliot-panel { padding: 22px; }
+.elliot-panel-heading, .elliot-detail-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.elliot-panel h2, .elliot-data-sources h2 { margin-top: 7px; color: #252c38; font-family: 'Manrope', sans-serif; font-size: 1.23rem; font-weight: 800; letter-spacing: -.04em; }
+.elliot-controls { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.elliot-horizon { display: flex; gap: 2px; border-radius: 10px; padding: 3px; background: #f1f5f6; }
+.elliot-horizon button { border: 0; border-radius: 8px; padding: 7px 8px; background: transparent; color: #7d9294; font-size: .63rem; font-weight: 700; }
+.elliot-horizon button.is-active { background: white; color: #318976; box-shadow: 0 2px 6px rgba(46, 112, 94, .1); }
+.elliot-filter { display: flex; gap: 3px; border-radius: 10px; padding: 3px; background: #faf0f1; }
+.elliot-filter button { border: 0; border-radius: 8px; padding: 7px 9px; background: transparent; color: #a77b82; font-size: .64rem; font-weight: 700; }
+.elliot-filter button.is-active { background: white; color: #bd4355; box-shadow: 0 2px 6px rgba(121, 53, 61, .08); }
+.elliot-risk-list { display: flex; flex-direction: column; gap: 5px; margin-top: 18px; }
+.elliot-risk-row { display: grid; grid-template-columns: 42px 1.1fr .9fr .9fr .9fr auto 18px; align-items: center; gap: 9px; width: 100%; border: 1px solid transparent; border-radius: 13px; padding: 11px 10px; background: #fffafa; text-align: left; transition: background .2s ease, border-color .2s ease; }
+.elliot-risk-row:hover, .elliot-risk-row.is-selected { border-color: #f0cdd1; background: #fff3f4; }
+.elliot-blood-group { font-family: 'Manrope', sans-serif; font-size: .93rem; font-weight: 800; }
+.elliot-row-type { color: #7c7f88; font-size: .65rem; }
+.elliot-row-stock strong, .elliot-row-demand strong, .elliot-row-prob strong { display: block; color: #333944; font-size: .77rem; }
+.elliot-row-stock small, .elliot-row-demand small, .elliot-row-prob small { display: block; margin-top: 2px; color: #a1a0a6; font-size: .56rem; white-space: nowrap; }
+.elliot-row-prob strong { color: #bd4355; }
+.elliot-row-trend { color: #cc6b78; font-size: .78rem; }
+.elliot-risk { display: inline-flex; justify-content: center; border-radius: 999px; padding: 5px 8px; font-size: .6rem; font-weight: 800; }
+.elliot-risk-low { background: #e8f5ef; color: #258761; }
+.elliot-risk-medium { background: #fff3d9; color: #a9761f; }
+.elliot-risk-high { background: #ffe7dc; color: #bd5b31; }
+.elliot-risk-critical { background: #fbe2e6; color: #b7354a; }
+.elliot-detail-panel { min-width: 0; }
+.elliot-detail-heading h2 { display: flex; align-items: baseline; gap: 7px; }
+.elliot-detail-heading h2 small { color: #9a9aa2; font-family: 'DM Sans', sans-serif; font-size: .68rem; font-weight: 600; letter-spacing: 0; }
+.elliot-detail-metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 20px; }
+.elliot-detail-metrics > div { border-radius: 13px; padding: 12px; background: #fff7f7; }
+.elliot-detail-metrics small, .elliot-detail-metrics strong { display: block; }
+.elliot-detail-metrics small { color: #98979e; font-size: .61rem; }
+.elliot-detail-metrics strong { margin-top: 5px; color: #2c333f; font-family: 'Manrope', sans-serif; font-size: 1.02rem; line-height: 1.2; }
+.elliot-detail-metrics em { color: #a7a3a6; font-family: 'DM Sans', sans-serif; font-size: .58rem; font-style: normal; font-weight: 500; }
+.elliot-detail-metrics strong.is-danger { color: #bd4355; font-size: .78rem; }
+.elliot-detail-metrics strong.is-safe { color: #2c926b; font-size: .78rem; }
+.elliot-chart-wrap { margin-top: 20px; border-top: 1px solid #f2e6e6; padding-top: 15px; }
+.elliot-chart-heading { display: flex; justify-content: space-between; color: #777982; font-size: .66rem; font-weight: 700; }
+.elliot-chart-legend { display: inline-flex; align-items: center; gap: 5px; color: #a19da0; font-size: .58rem; font-weight: 500; }
+.elliot-chart-legend i { width: 14px; height: 3px; display: inline-block; margin-left: 5px; border-radius: 5px; }
+.elliot-legend-stock { background: #c9475a; }
+.elliot-legend-demand { background: #dcb5ba; }
+.elliot-chart { display: block; width: 100%; height: 180px; margin-top: 6px; overflow: visible; }
+.elliot-chart text { fill: #b3a9ab; font-family: 'DM Sans', sans-serif; font-size: 9px; }
+.elliot-grid-line { stroke: #f3e8e9; stroke-width: 1; stroke-dasharray: 3 4; }
+.elliot-stock-line, .elliot-demand-line { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-width: 3; }
+.elliot-stock-line { stroke: #c9475a; }
+.elliot-demand-line { stroke: #dcb5ba; stroke-dasharray: 5 4; stroke-width: 2; }
+.elliot-stock-dot { fill: #c9475a; stroke: white; stroke-width: 2; }
+.elliot-explain { margin-top: 4px; border-radius: 14px; padding: 14px; background: #f6f1f5; }
+.elliot-explain h3 { display: flex; align-items: center; gap: 7px; color: #77647b; font-size: .72rem; font-weight: 800; }
+.elliot-explain ul { display: grid; gap: 7px; margin-top: 10px; padding: 0; list-style: none; }
+.elliot-explain li { position: relative; padding-left: 15px; color: #777982; font-size: .67rem; line-height: 1.45; }
+.elliot-explain li::before { position: absolute; top: .4em; left: 0; width: 6px; height: 6px; border-radius: 99px; background: #c9475a; content: ""; }
+.elliot-data-sources { display: grid; grid-template-columns: .45fr 1fr; gap: 28px; margin-top: 18px; padding: 22px; }
+.elliot-source-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 13px 22px; }
+.elliot-source-grid strong, .elliot-source-grid span { display: block; }
+.elliot-source-grid strong { color: #444852; font-size: .7rem; text-transform: capitalize; }
+.elliot-source-grid span { margin-top: 3px; color: #94939a; font-size: .65rem; line-height: 1.4; }
+.elliot-loading, .elliot-error { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 60vh; color: #bd4355; font-size: .9rem; }
+.elliot-error button { border: 0; border-radius: 99px; padding: 8px 13px; background: #c9475a; color: white; font-size: .75rem; }
+
 @media (max-width: 1023px) {
   .bc-nav-links { gap: 15px; margin-right: 15px; }
   .bc-nav-links button { font-size: .7rem; }
@@ -137,6 +224,18 @@ button { cursor: pointer; }
   .bc-action-card:last-child { border-bottom: 0; }
   .bc-section { padding: 74px 0; }
   .bc-cta-inner { align-items: flex-start; flex-direction: column; padding: 28px 24px; }
+  .elliot-shell { padding: 89px 16px 48px; }
+  .elliot-header { align-items: flex-start; flex-direction: column; }
+  .elliot-header-actions { flex-wrap: wrap; }
+  .elliot-summary-grid { grid-template-columns: repeat(2, 1fr); }
+  .elliot-content-grid { grid-template-columns: 1fr; }
+  .elliot-panel-heading { align-items: flex-start; flex-direction: column; }
+  .elliot-controls { justify-content: flex-start; }
+  .elliot-risk-row { grid-template-columns: 38px 1fr auto; }
+  .elliot-row-type, .elliot-row-stock, .elliot-row-demand, .elliot-row-trend { display: none; }
+  .elliot-row-prob { margin-left: auto; }
+  .elliot-data-sources { grid-template-columns: 1fr; gap: 18px; }
+  .elliot-source-grid { grid-template-columns: 1fr; }
 }
 
 /* Custom map styles */

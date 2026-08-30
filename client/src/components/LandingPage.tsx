@@ -1,289 +1,390 @@
-// src/components/LandingPage.jsx
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
+import {
+  FaArrowRight,
+  FaCheckCircle,
+  FaHeart,
+  FaQuoteLeft,
+  FaShieldAlt,
+  FaTint,
+  FaUsers,
+} from "react-icons/fa";
+
+const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+const API_URL = `${(import.meta as any).env?.VITE_API_URL || ""}/api/donors`;
+
+const stories = [
+  {
+    quote: "A few minutes of my time became someone else's second chance.",
+    name: "Asha Patel",
+    role: "Regular donor",
+  },
+  {
+    quote: "Finding a nearby donor felt simple when every second mattered.",
+    name: "Rohit Verma",
+    role: "Community member",
+  },
+  {
+    quote: "BloodConnect makes helping feel personal, safe, and immediate.",
+    name: "Sana Khan",
+    role: "Volunteer",
+  },
+];
 
 function LandingPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [counts, setCounts] = useState<Record<string, number>>({});
-  const bloodGroups = ["A+","A-","B+","B-","AB+","AB-","O+","O-"];
-  const API_URL = `${(import.meta as any).env?.VITE_API_URL || ''}/api/donors`;
 
-  // Hook calls properly placed inside the function component
   useEffect(() => {
-    if (location.hash) {
-      const id = location.hash.replace("#", "");
-      const element = document.getElementById(id);
-      if (element) {
-        setTimeout(() => {
-          element.scrollIntoView({ behavior: "smooth" });
-        }, 200);
-      }
+    if (!location.hash) return;
+    const id = location.hash.replace("#", "");
+    const element = document.getElementById(id);
+    if (element) {
+      setTimeout(() => element.scrollIntoView({ behavior: "smooth" }), 160);
     }
   }, [location]);
 
   useEffect(() => {
     const fetchCounts = async () => {
       try {
-        type Donor = { bloodGroup?: string | null };
-        const res = await axios.get<Donor[]>(API_URL);
-        const list: Donor[] = res.data || [];
-        const c = bloodGroups.reduce((acc, g) => {
-          acc[g] = list.filter((d) => d.bloodGroup === g).length;
+        const res = await axios.get<Array<{ bloodGroup?: string | null }>>(API_URL);
+        const nextCounts = bloodGroups.reduce((acc, group) => {
+          acc[group] = (res.data || []).filter((donor) => donor.bloodGroup === group).length;
           return acc;
         }, {} as Record<string, number>);
-        setCounts(c);
-      } catch (e) {
-        console.error("Failed to fetch donor counts:", e);
+        setCounts(nextCounts);
+      } catch (error) {
+        console.error("Failed to fetch donor counts:", error);
       }
     };
     fetchCounts();
-  }, [API_URL, bloodGroups]);
+  }, []);
+
+  const goToSection = (section: string) => {
+    navigate(`/#${section}`);
+  };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Hero Section */}
-      <section
-        id="hero"
-        className="relative min-h-screen flex items-center justify-center text-center px-6"
-      >
-        {/* Background Image */}
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage:
-              "url('https://www.shutterstock.com/image-vector/world-donor-day-abstract-wallpaper-600nw-2115749144.jpg')",
-          }}
-        ></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/20"></div>
+    <main className="bc-page overflow-hidden">
+      <section className="bc-hero relative">
+        <div className="bc-orb bc-orb-one" />
+        <div className="bc-orb bc-orb-two" />
+        <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 pb-16 pt-28 lg:grid-cols-[0.92fr_1.08fr] lg:px-10 lg:pb-24 lg:pt-36">
+          <div className="relative z-10 max-w-xl">
+            <div className="bc-eyebrow mb-6">
+              <span className="bc-eyebrow-dot" />
+              Community-powered care
+            </div>
+            <h1 className="bc-display">
+              Your blood has the{" "}
+              <span className="bc-display-highlight">power</span> to paint a
+              smile on someone else's <span className="bc-display-highlight">face.</span>
+            </h1>
+            <p className="mt-6 max-w-lg text-base leading-7 text-slate-600 md:text-lg">
+              One donation can help save up to three lives. Find a donor nearby,
+              register to give, and turn a small act into someone&apos;s biggest
+              hope.
+            </p>
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <button
+                onClick={() => navigate("/register")}
+                className="bc-button bc-button-primary"
+              >
+                Become a donor <FaArrowRight className="text-sm" />
+              </button>
+              <button
+                onClick={() => navigate("/search")}
+                className="bc-button bc-button-ghost"
+              >
+                Find a donor
+              </button>
+            </div>
+            <div className="mt-8 flex items-center gap-3 text-sm text-slate-500">
+              <div className="flex -space-x-2">
+                {["A", "R", "S"].map((letter, index) => (
+                  <span
+                    key={letter}
+                    className={`bc-avatar ${index === 1 ? "bc-avatar-rose" : ""} ${
+                      index === 2 ? "bc-avatar-plum" : ""
+                    }`}
+                  >
+                    {letter}
+                  </span>
+                ))}
+              </div>
+              <span>
+                <strong className="text-slate-800">People like you</strong> are
+                already helping their community.
+              </span>
+            </div>
+          </div>
 
-        <div className="relative z-10 max-w-4xl text-white mt-24 space-y-6">
-          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight">BloodConnect</h1>
-          <p className="text-lg md:text-xl text-white/90">Donate blood, save lives. Find donors near you instantly.</p>
-          <div className="flex flex-col md:flex-row gap-4 justify-center">
+          <div className="relative z-10">
+            <div className="bc-hero-image-wrap">
+              <img
+                src="https://images.unsplash.com/photo-1559757175-0eb30cd8c063?auto=format&fit=crop&w=1400&q=85"
+                alt="A patient resting safely in a hospital bed"
+                className="bc-hero-image"
+              />
+              <div className="bc-image-wash" />
+              <div className="bc-image-caption">
+                <span className="bc-caption-icon">
+                  <FaHeart />
+                </span>
+                <span>
+                  <strong>Every drop matters.</strong>
+                  <small>Give hope a chance today.</small>
+                </span>
+              </div>
+            </div>
+            <div className="bc-hero-badge">
+              <span className="bc-badge-icon">
+                <FaTint />
+              </span>
+              <span>
+                <strong>Urgent need</strong>
+                <small>O+ donors nearby</small>
+              </span>
+              <FaArrowRight className="ml-auto text-xs text-rose-500" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="relative z-20 mx-auto -mt-2 max-w-7xl px-6 lg:px-10">
+        <div className="bc-action-grid">
+          <button className="bc-action-card" onClick={() => navigate("/register")}>
+            <span className="bc-action-icon bc-action-icon-dark">
+              <FaTint />
+            </span>
+            <span>
+              <strong>Donate now</strong>
+              <small>Register in a few minutes</small>
+            </span>
+            <FaArrowRight className="bc-action-arrow" />
+          </button>
+          <button className="bc-action-card" onClick={() => navigate("/search")}>
+            <span className="bc-action-icon bc-action-icon-rose">
+              <FaUsers />
+            </span>
+            <span>
+              <strong>Find a donor</strong>
+              <small>Search by group and city</small>
+            </span>
+            <FaArrowRight className="bc-action-arrow" />
+          </button>
+          <button className="bc-action-card" onClick={() => navigate("/requests")}>
+            <span className="bc-action-icon bc-action-icon-plum">
+              <FaHeart />
+            </span>
+            <span>
+              <strong>Ask for help</strong>
+              <small>Post an urgent request</small>
+            </span>
+            <FaArrowRight className="bc-action-arrow" />
+          </button>
+        </div>
+      </section>
+
+      <section className="bc-section bg-white" id="why-donate">
+        <div className="mx-auto grid max-w-7xl gap-12 px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-10">
+          <div>
+            <div className="bc-section-kicker">Why it matters</div>
+            <h2 className="bc-section-title">
+              A little time can mean <span>everything.</span>
+            </h2>
+            <p className="mt-5 max-w-md leading-7 text-slate-600">
+              Blood cannot be manufactured. It comes from people who choose to
+              show up for one another, especially when a family needs help most.
+            </p>
             <button
               onClick={() => navigate("/register")}
-              className="px-8 py-4 rounded-2xl bg-red-600 text-white shadow-lg hover:bg-red-700 font-semibold transition-transform hover:scale-105"
+              className="bc-text-link mt-7"
             >
-              Register as Donor
+              Start your donor journey <FaArrowRight />
             </button>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="bc-feature-card bc-feature-card-tall">
+              <span className="bc-feature-icon">
+                <FaHeart />
+              </span>
+              <h3>Give with purpose</h3>
+              <p>
+                Your donation reaches a real person in your own community when
+                they need it most.
+              </p>
+            </div>
+            <div className="bc-feature-card bc-feature-card-soft">
+              <span className="bc-feature-icon">
+                <FaShieldAlt />
+              </span>
+              <h3>Simple and safe</h3>
+              <p>
+                Share only what helps recipients connect with the right donor.
+              </p>
+            </div>
+            <div className="bc-feature-card bc-feature-card-wide sm:col-span-2">
+              <span className="bc-feature-icon">
+                <FaCheckCircle />
+              </span>
+              <div>
+                <h3>Stay ready to help</h3>
+                <p>
+                  Keep your availability and donation history in one place, so
+                  the next opportunity to help is easy to find.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="bc-section bc-availability-section" id="availability">
+        <div className="mx-auto max-w-7xl px-6 lg:px-10">
+          <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+            <div>
+              <div className="bc-section-kicker">Our community</div>
+              <h2 className="bc-section-title max-w-xl">
+                Help is closer than you think.
+              </h2>
+              <p className="mt-4 max-w-lg leading-7 text-slate-600">
+                Browse the blood groups our community is currently supporting.
+                Every new donor makes the network stronger.
+              </p>
+            </div>
             <button
               onClick={() => navigate("/search")}
-              className="px-8 py-4 rounded-2xl bg-white/10 border border-white/40 text-white hover:bg-white/20 font-semibold transition-transform hover:scale-105"
+              className="bc-button bc-button-dark self-start md:self-auto"
             >
-              Find Donors
-            </button>
-            <button
-              onClick={() => navigate("/map")}
-              className="px-8 py-4 rounded-2xl bg-green-600 text-white shadow-lg hover:bg-green-700 font-semibold transition-transform hover:scale-105"
-            >
-              View Donors on Map
+              Explore donors <FaArrowRight />
             </button>
           </div>
-          <div className="text-sm italic text-white/80">"Your one drop can be someone's lifeline."</div>
+          <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
+            {bloodGroups.map((group) => (
+              <button
+                key={group}
+                onClick={() => navigate(`/search?bloodGroup=${encodeURIComponent(group)}`)}
+                className="bc-blood-card"
+              >
+                <span className="bc-blood-drop">
+                  <FaTint />
+                </span>
+                <strong>{group}</strong>
+                <small>{counts[group] || 0} listed</small>
+              </button>
+            ))}
+          </div>
+          <div className="mt-8 grid grid-cols-2 gap-4 border-t border-rose-100 pt-8 md:grid-cols-4">
+            {[
+              ["90+", "days between donations"],
+              ["8", "blood groups supported"],
+              ["200", "recent donor records"],
+              ["24/7", "community availability"],
+            ].map(([value, label]) => (
+              <div key={label}>
+                <div className="text-3xl font-bold tracking-tight text-slate-900">{value}</div>
+                <div className="mt-1 text-sm text-slate-500">{label}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      <section className="bg-white/70 backdrop-blur-sm py-6">
-        <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="p-4 rounded-2xl bg-white shadow-sm text-center">
-            <div className="text-2xl font-bold text-rose-700">90+</div>
-            <div className="text-xs text-zinc-500">Days between donations</div>
+      <section className="bc-section bg-white" id="how-it-works">
+        <div className="mx-auto max-w-7xl px-6 lg:px-10">
+          <div className="text-center">
+            <div className="bc-section-kicker justify-center">How it works</div>
+            <h2 className="bc-section-title">Three steps. One meaningful act.</h2>
           </div>
-          <div className="p-4 rounded-2xl bg-white shadow-sm text-center">
-            <div className="text-2xl font-bold text-rose-700">8</div>
-            <div className="text-xs text-zinc-500">Blood groups supported</div>
-          </div>
-          <div className="p-4 rounded-2xl bg-white shadow-sm text-center">
-            <div className="text-2xl font-bold text-rose-700">200</div>
-            <div className="text-xs text-zinc-500">Recent donors</div>
-          </div>
-          <div className="p-4 rounded-2xl bg-white shadow-sm text-center">
-            <div className="text-2xl font-bold text-rose-700">24/7</div>
-            <div className="text-xs text-zinc-500">Availability tracking</div>
+          <div className="mt-12 grid gap-5 md:grid-cols-3">
+            {[
+              ["01", "Register", "Tell us a little about yourself and your blood group."],
+              ["02", "Connect", "Find a nearby donor or let someone know you are ready to help."],
+              ["03", "Make an impact", "Show up safely and give someone more time with the people they love."],
+            ].map(([number, title, description]) => (
+              <div key={number} className="bc-step-card">
+                <span className="bc-step-number">{number}</span>
+                <h3>{title}</h3>
+                <p>{description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="bg-white py-16">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold text-rose-700">Live Availability</h2>
-            <div className="flex gap-2">
-              {bloodGroups.map((g) => (
-                <button key={g} onClick={() => navigate(`/search?bloodGroup=${encodeURIComponent(g)}`)} className="px-3 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition-colors">
-                  {g}
-                </button>
-              ))}
+      <section className="bc-stories-section" id="stories">
+        <div className="mx-auto max-w-7xl px-6 lg:px-10">
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <div>
+              <div className="bc-section-kicker">From the community</div>
+              <h2 className="bc-section-title">Real people. Real hope.</h2>
             </div>
+            <button onClick={() => goToSection("why-donate")} className="bc-text-link">
+              Why donate <FaArrowRight />
+            </button>
           </div>
-          <div className="space-y-3">
-            {bloodGroups.map((g) => (
-              <div key={g} className="flex items-center gap-3">
-                <span className="w-16 text-sm text-zinc-700">{g}</span>
-                <div className="flex-1 h-3 rounded-full bg-zinc-100 overflow-hidden">
-                  <div style={{ width: `${Math.min(100, (counts[g] || 0) * 5)}%` }} className="h-full bg-gradient-to-r from-rose-500 to-red-500 transition-all duration-500"></div>
+          <div className="mt-10 grid gap-5 md:grid-cols-3">
+            {stories.map((story) => (
+              <article key={story.name} className="bc-story-card">
+                <FaQuoteLeft className="text-2xl text-rose-300" />
+                <p className="mt-5 text-lg leading-8 text-slate-800">“{story.quote}”</p>
+                <div className="mt-7 border-t border-rose-100 pt-4">
+                  <strong className="block text-sm text-slate-900">{story.name}</strong>
+                  <span className="text-xs text-slate-500">{story.role}</span>
                 </div>
-                <span className="w-10 text-sm text-zinc-600">{counts[g] || 0}</span>
-              </div>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Section 2 - Why Donate Blood */}
-      <section
-        id="why-donate"
-        className="min-h-screen bg-white flex flex-col items-center justify-center px-6 py-16 text-center"
-      >
-        <h2 className="text-4xl font-bold text-red-600 mb-6">
-          Why Donate Blood?
-        </h2>
-        <p className="text-lg text-zinc-700 max-w-3xl mb-12">
-          Every 2 seconds, someone in the world needs blood. Donating blood can
-          save up to three lives in a single donation.
-        </p>
-
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl">
-          {[
-            {
-              title: "Save Lives",
-              img: "https://images.unsplash.com/photo-1584452964155-ef139340f0db?auto=format&fit=crop&w=800&q=80",
-            },
-            {
-              title: "Easy & Safe",
-              img: "https://t3.ftcdn.net/jpg/03/09/20/22/360_F_309202280_CgsWoCAdLBe9INBvdwBKUkpaLEP4XNLa.jpg",
-            },
-            {
-              title: "Be a Hero",
-              img: "https://www.shutterstock.com/image-vector/blood-donation-design-template-vector-600nw-452564095.jpg",
-            },
-          ].map((card, i) => (
-            <div
-              key={i}
-              className="bg-red-50 p-4 rounded-2xl shadow-lg transform transition-all duration-500 hover:scale-105 hover:-translate-y-2 hover:shadow-2xl"
-            >
-              <img
-                src={card.img}
-                alt={card.title}
-                className="w-full h-60 object-cover rounded-xl mb-4 transition-transform duration-500 hover:scale-110"
-              />
-              <h3 className="text-xl font-semibold text-red-600">
-                {card.title}
-              </h3>
-            </div>
-          ))}
+      <section className="bc-cta-section">
+        <div className="bc-cta-inner">
+          <div>
+            <div className="bc-section-kicker text-rose-200">Your next step</div>
+            <h2>Someone out there is waiting for a reason to hope.</h2>
+            <p>Be that reason. Register today and make your kindness count.</p>
+          </div>
+          <button onClick={() => navigate("/register")} className="bc-button bc-button-light">
+            Register as a donor <FaArrowRight />
+          </button>
         </div>
       </section>
 
-      {/* Section 3 - How It Works */}
-      <section
-        id="how-it-works"
-        className="min-h-screen bg-red-50 flex flex-col items-center justify-center px-6 py-16 text-center dark:bg-zinc-900 dark:text-white"
-      >
-        <h2 className="text-4xl font-bold text-red-600 mb-6">How It Works</h2>
-        <div className="grid md:grid-cols-3 gap-10 max-w-5xl">
-          <div className="p-6 bg-white shadow-lg rounded-2xl transition-transform hover:scale-105">
-            <h3 className="text-2xl font-semibold mb-3 text-red-500">
-              1. Register
-            </h3>
-            <p>
-              Sign up as a donor with your details."Join our community as a
-              donor. It only takes a few minutes, and your small step can save
-              many lives."
+      <footer className="bc-footer" id="contact">
+        <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-[1.4fr_1fr_1fr] lg:px-10">
+          <div>
+            <div className="bc-footer-brand">
+              <span className="bc-brand-mark">
+                <FaHeart />
+              </span>
+              BloodConnect
+            </div>
+            <p className="mt-4 max-w-xs text-sm leading-6 text-rose-100/70">
+              Connecting donors and recipients with speed, care, and trust.
             </p>
           </div>
-          <div className="p-6 bg-white shadow-lg rounded-2xl transition-transform hover:scale-105">
-            <h3 className="text-2xl font-semibold mb-3 text-red-500">
-              2. Search
-            </h3>
-            <p>
-              Need blood urgently? Quickly search and connect with verified
-              donors near your location in just a few clicks.
-            </p>
+          <div>
+            <h3>Explore</h3>
+            <button onClick={() => navigate("/search")}>Find donors</button>
+            <button onClick={() => navigate("/requests")}>Blood requests</button>
+            <button onClick={() => goToSection("how-it-works")}>How it works</button>
           </div>
-          <div className="p-6 bg-white shadow-lg rounded-2xl transition-transform hover:scale-105">
-            <h3 className="text-2xl font-semibold mb-3 text-red-500">
-              3. Connect
-            </h3>
-            <p>
-              Save lives with timely help.Reach out to a donor, donate safely,
-              and make an impact. Your timely help can give someone a second
-              chance at life
-            </p>
+          <div>
+            <h3>Get in touch</h3>
+            <a href="mailto:support@bloodconnect.org">support@bloodconnect.org</a>
+            <a href="tel:+919876543210">+91 98765 43210</a>
+            <span>Bengaluru, India</span>
           </div>
         </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="bg-white dark:bg-zinc-900 py-16">
-        <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-rose-700 dark:text-rose-400 mb-8">What Donors Say</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {[{
-              quote: 'Donating blood makes me feel connected to my community.', name: 'Asha'
-            },{
-              quote: 'The platform is simple and quick. Found donors in minutes.', name: 'Rohit'
-            },{
-              quote: 'Scheduling availability helped me donate regularly.', name: 'Sana'
-            }].map((t,i)=> (
-              <div key={i} className="p-6 rounded-3xl bg-rose-50 border border-rose-200 shadow-sm hover:shadow-lg transition dark:bg-zinc-800 dark:border-zinc-700">
-                <p className="text-zinc-700 dark:text-zinc-200">"{t.quote}"</p>
-                <div className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">— {t.name}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer id="contact" className="bg-gradient-to-b from-red-700 to-red-600 text-white pt-12">
-        <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-4 gap-8">
-          <div>
-            <h3 className="text-xl font-bold mb-3">BloodConnect</h3>
-            <p className="text-sm text-white/80">Connecting donors and recipients with speed and trust.</p>
-          </div>
-          <div>
-            <h3 className="font-semibold text-lg mb-3">Quick Links</h3>
-            <div className="space-y-2 text-sm">
-              <a className="hover:text-gray-200 transition-colors" href="/">Home</a>
-              <a className="hover:text-gray-200 transition-colors" href="/register">Register</a>
-              <a className="hover:text-gray-200 transition-colors" href="/search">Find Donors</a>
-              <a className="hover:text-gray-200 transition-colors" href="/map">View Map</a>
-              <a className="hover:text-gray-200 transition-colors" href="/contact">Contact</a>
-            </div>
-          </div>
-          <div>
-            <h3 className="font-semibold text-lg mb-3">Contact</h3>
-            <p>Email: support@bloodconnect.org</p>
-            <p>Phone: +91 98765 43210</p>
-            <p>Address: 123, Red Cross Street, Bengaluru</p>
-          </div>
-          <div>
-            <h3 className="font-semibold text-lg mb-3">Newsletter</h3>
-            <div className="flex gap-2">
-              <input type="email" placeholder="Your email" className="flex-1 px-4 py-2 rounded-xl bg-white/10 border border-white/30 placeholder-white/70 focus:bg-white/20 focus:outline-none transition-colors" />
-              <button className="px-4 py-2 rounded-xl bg-white text-red-700 font-semibold hover:bg-rose-100 transition-colors">Subscribe</button>
-            </div>
-            <div className="flex gap-4 mt-4">
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="transition-opacity hover:opacity-80">
-                <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M22 12C22 6.477 17.523 2 12 2S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.988H7.898v-2.89h2.54V9.845c0-2.507 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.462h-1.26c-1.243 0-1.63.772-1.63 1.562v1.875h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" /></svg>
-              </a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="transition-opacity hover:opacity-80">
-                <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M24 4.557a9.83 9.83 0 01-2.828.775 4.932 4.932 0 002.165-2.724 9.864 9.864 0 01-3.127 1.195 4.916 4.916 0 00-8.38 4.482A13.94 13.94 0 011.671 3.149 4.916 4.916 0 003.195 9.723a4.903 4.903 0 01-2.228-.616c-.054 2.281 1.581 4.415 3.949 4.89a4.936 4.936 0 01-2.224.084 4.923 4.923 0 004.598 3.417A9.867 9.867 0 010 19.54 13.924 13.924 0 007.548 21c9.142 0 14.307-7.721 13.995-14.646A9.935 9.935 0 0024 4.557z" /></svg>
-              </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="transition-opacity hover:opacity-80">
-                <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.633.336 3.608 1.311.975.975 1.249 2.242 1.311 3.608.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.062 1.366-.336 2.633-1.311 3.608-.975.975-2.242 1.249-3.608 1.311-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.366-.062-2.633-.336-3.608-1.311-.975-.975-1.249-2.242-1.311-3.608C2.175 15.747 2.163 15.367 2.163 12s.012-3.584.07-4.85c.062-1.366.336-2.633 1.311-3.608.975-.975 2.242-1.249 3.608-1.311C8.416 2.175 8.796 2.163 12 2.163zm0-2.163C8.741 0 8.332.013 7.052.072 5.77.131 4.548.402 3.515 1.435 2.482 2.468 2.211 3.69 2.152 4.972.013 8.332 0 8.741 0 12s.013 3.668.072 4.948c.059 1.282.33 2.504 1.363 3.537s2.255 1.304 3.537 1.363C8.332 23.987 8.741 24 12 24s3.668-.013 4.948-.072c1.282-.059 2.504-.33 3.537-1.363s1.304-2.255 1.363-3.537C23.987 15.668 24 15.259 24 12s-.013-3.668-.072-4.948c-.059-1.282-.33-2.504-1.363-3.537S18.23.131 16.948.072C15.668.013 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zm0 10.162a3.999 3.999 0 110-7.998 3.999 3.999 0 010 7.998zm6.406-11.845a1.44 1.44 0 11-2.881 0 1.44 1.44 0 012.881 0z" /></svg>
-              </a>
-            </div>
-          </div>
-        </div>
-        <div className="mt-10 border-t border-white/20">
-          <p className="text-sm text-center py-6">© 2025 BloodConnect. All rights reserved.</p>
+        <div className="border-t border-white/10 py-5 text-center text-xs text-rose-100/50">
+          © 2025 BloodConnect. Every drop counts.
         </div>
       </footer>
-    </div>
+    </main>
   );
 }
 

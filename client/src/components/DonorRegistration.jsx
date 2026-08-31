@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 
-const API_URL = `${import.meta.env.VITE_API_URL}/api/donors`;
+const API_URL = `${import.meta.env.VITE_API_URL || ""}/api/donors`;
 const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 function DonorRegistration() {

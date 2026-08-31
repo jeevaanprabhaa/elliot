@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import {
   FiActivity,
   FiAlertTriangle,
@@ -76,6 +77,7 @@ function ForecastChart({ item }) {
 }
 
 function HospitalDashboard() {
+  const navigate = useNavigate();
   const [prediction, setPrediction] = useState(null);
   const [selectedKey, setSelectedKey] = useState("");
   const [filter, setFilter] = useState("all");
@@ -153,6 +155,7 @@ function HospitalDashboard() {
           </div>
           <div className="elliot-header-actions">
             <span className="elliot-prototype-pill"><FiInfo /> {prediction.label}</span>
+            <button className="elliot-refresh" onClick={() => navigate("/emergency")}><FiAlertTriangle /> Emergency request</button>
             <button className="elliot-refresh" onClick={fetchPrediction}><FiRefreshCw /> Refresh</button>
           </div>
         </div>

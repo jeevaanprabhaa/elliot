@@ -9,6 +9,7 @@ import RequestBoard from "./RequestBoard";
 import DonorProfile from "./DonorProfile";
 import DonorMap from "./DonorMap";
 import HospitalDashboard from "./HospitalDashboard";
+import EmergencyFlow from "./EmergencyFlow";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/donor/:id" element={<DonorProfile />} />
         <Route path="/requests" element={<RequestBoard />} />
         <Route path="/hospital-dashboard" element={<HospitalDashboard />} />
+        <Route path="/emergency" element={<EmergencyFlow />} />
         <Route path="/contact" element={<Contact />} />
       </Routes>
     </Router>

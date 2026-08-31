@@ -1,0 +1,471 @@
+Add a new end-to-end feature to my EXISTING blood donor app called:
+
+"Emergency Blood Request – Donor Matching & Live Donation Flow"
+
+IMPORTANT:
+Do not rebuild my existing app.
+Do not remove or break any existing features.
+Use the existing donor, user, hospital, blood-group and authentication systems.
+
+I want this feature to work similar to the Rapido/Uber ride flow.
+
+================================================
+CORE FLOW
+================================================
+
+HOSPITAL NEEDS BLOOD
+        ↓
+CREATE EMERGENCY REQUEST
+        ↓
+ELLIOT FINDS BEST MATCHING DONOR
+        ↓
+DONOR RECEIVES ALERT
+        ↓
+DONOR ACCEPTS
+        ↓
+DONOR TRAVELS TO HOSPITAL
+        ↓
+HOSPITAL SEES DONOR STATUS + ETA
+        ↓
+DONOR ARRIVES
+        ↓
+BLOOD DONATION
+        ↓
+DONATION COMPLETED
+        ↓
+REQUEST CLOSED
+
+================================================
+1. HOSPITAL CREATES REQUEST
+================================================
+
+Add an "Emergency Blood Request" button.
+
+Hospital enters:
+
+- Blood group
+- Blood component
+- Units required
+- Urgency
+- Hospital location
+- Required time
+
+Example:
+
+URGENT REQUEST
+
+O+ Platelets
+2 units
+Critical
+City Care Hospital
+
+Button:
+"Find Donor"
+
+================================================
+2. FIND BEST DONOR
+================================================
+
+After clicking "Find Donor", Elliot should search the existing donor database.
+
+Filter by:
+
+- Compatible blood group
+- Donation eligibility
+- Availability
+- Distance from hospital
+
+Then rank suitable donors based on:
+
+- Distance
+- Eligibility
+- Availability
+- Reliability / previous response
+
+Show:
+
+BEST MATCH
+
+Donor: Verified Donor
+Blood Group: O+
+Distance: 2.4 km
+Eligibility: Eligible
+Match Score: 94%
+
+Button:
+
+"Send Emergency Alert"
+
+================================================
+3. DONOR RECEIVES ALERT
+================================================
+
+The donor should receive a prominent emergency notification.
+
+Example:
+
+🚨 EMERGENCY BLOOD REQUEST
+
+O+ Platelets needed
+
+City Care Hospital
+2.4 km away
+
+2 units required
+
+[ ACCEPT ]
+[ DECLINE ]
+
+Use the existing notification system if available.
+
+For demo purposes, make the alert appear instantly in the donor dashboard.
+
+================================================
+4. RAPIDO-STYLE ACCEPTANCE
+================================================
+
+When donor clicks ACCEPT:
+
+Change request status to:
+
+DONOR ACCEPTED ✓
+
+Hospital immediately sees:
+
+Donor found
+Donor accepted
+Donor is travelling
+
+Donor sees:
+
+Donation Request Accepted
+
+Hospital:
+City Care Hospital
+
+Distance:
+2.4 km
+
+ETA:
+18 minutes
+
+Button:
+
+"Start Journey"
+
+================================================
+5. LIVE JOURNEY
+================================================
+
+Create a Rapido-like journey status screen.
+
+Show:
+
+DONOR ACCEPTED ✓
+      ↓
+ON THE WAY 🚗
+      ↓
+ARRIVED AT HOSPITAL
+      ↓
+DONATION IN PROGRESS
+      ↓
+DONATION COMPLETED ✓
+
+For the prototype, use simulated location and ETA.
+
+Show:
+
+"Simulated live tracking"
+
+Do NOT implement continuous real-world location tracking.
+
+The hospital dashboard should show:
+
+Donor:
+Verified donor
+
+Status:
+On the way
+
+ETA:
+18 min
+
+Distance:
+2.4 km
+
+================================================
+6. HOSPITAL LIVE STATUS
+================================================
+
+Hospital should have a request tracking page.
+
+Example:
+
+REQUEST #EL-1024
+
+O+ Platelets
+2 units
+CRITICAL
+
+STATUS:
+
+✓ Request created
+✓ Donor matched
+✓ Donor accepted
+● Donor travelling
+○ Arrived
+○ Donation
+○ Completed
+
+Show a progress timeline.
+
+================================================
+7. DONOR ARRIVAL
+================================================
+
+Add button for demo:
+
+"I've Arrived"
+
+When clicked:
+
+Donor status:
+ARRIVED AT HOSPITAL
+
+Hospital receives:
+
+"Matched donor has arrived."
+
+Then show:
+
+[ START DONATION ]
+
+================================================
+8. DONATION PROCESS
+================================================
+
+After hospital clicks "Start Donation":
+
+Status:
+
+DONATION IN PROGRESS
+
+Show:
+
+Donor arrived ✓
+Eligibility verified ✓
+Donation started ●
+
+For the prototype, do not collect medical information unnecessarily.
+
+Use a simple simulated process.
+
+Then button:
+
+"Complete Donation"
+
+================================================
+9. DONATION COMPLETED
+================================================
+
+After clicking "Complete Donation":
+
+Show a success screen:
+
+🎉 DONATION COMPLETED
+
+Thank you for helping save lives.
+
+Hospital:
+City Care Hospital
+
+Blood Group:
+O+
+
+Component:
+Platelets
+
+Status:
+Completed ✓
+
+Update the blood request:
+
+REQUEST FULFILLED ✓
+
+Update donor:
+
+Donation added to donation history.
+
+Update hospital inventory:
+
++1 / + required units
+
+================================================
+10. RAPIDO-STYLE UI
+================================================
+
+Make the experience visually similar to a ride-booking workflow, but DO NOT copy Rapido's branding or UI exactly.
+
+Use the concept:
+
+Request
+→ Match
+→ Accept
+→ Travel
+→ Arrive
+→ Complete
+
+Use a large status card and progress timeline.
+
+Donor side:
+
+REQUEST
+MATCHED
+ACCEPTED
+ON THE WAY
+ARRIVED
+DONATING
+COMPLETED
+
+Hospital side:
+
+REQUEST CREATED
+DONOR FOUND
+DONOR ACCEPTED
+DONOR ETA
+DONOR ARRIVED
+DONATION
+COMPLETED
+
+================================================
+11. REAL-TIME DEMO SYNC
+================================================
+
+If the existing app supports WebSockets/realtime updates, use them.
+
+Otherwise implement polling or shared backend state.
+
+When donor accepts:
+
+Hospital dashboard should update automatically.
+
+When donor clicks "I've Arrived":
+
+Hospital should update.
+
+When donation is completed:
+
+Both donor and hospital should see the completed status.
+
+================================================
+12. EMERGENCY REQUEST STATES
+================================================
+
+Use these backend statuses:
+
+CREATED
+SEARCHING
+DONOR_MATCHED
+DONOR_ACCEPTED
+DONOR_TRAVELLING
+DONOR_ARRIVED
+DONATION_IN_PROGRESS
+COMPLETED
+CANCELLED
+
+Do not use only frontend state.
+
+Persist the request status in the database.
+
+================================================
+13. DEMO MODE
+================================================
+
+Create a complete demo scenario.
+
+Example:
+
+Hospital requests:
+
+O+ Platelets
+2 units
+
+Elliot finds:
+
+Donor A
+1.8 km
+Eligible
+Match score 96%
+
+Donor receives alert.
+
+Click:
+
+ACCEPT
+
+Then show:
+
+DONOR ACCEPTED
+ETA 12 MIN
+
+Click:
+
+START JOURNEY
+
+Then:
+
+ON THE WAY
+
+Click:
+
+I'VE ARRIVED
+
+Then:
+
+ARRIVED
+
+Hospital clicks:
+
+START DONATION
+
+Then:
+
+DONATION IN PROGRESS
+
+Finally:
+
+COMPLETE DONATION
+
+Show:
+
+REQUEST FULFILLED ✓
+
+The entire process must work from start to finish without requiring real external APIs.
+
+================================================
+14. IMPORTANT
+================================================
+
+This is an extension of my existing blood donor app.
+
+DO NOT create a separate application.
+
+Reuse:
+- existing donors
+- existing users
+- existing authentication
+- existing blood groups
+- existing hospitals
+- existing database
+- existing notification system
+
+Make the new feature feel like a natural part of the existing application.
+
+The final experience should feel like:
+
+"Rapido for emergency blood donation"
+
+but the actual product is:
+
+ELLIOT
+Predict → Match → Alert → Respond → Donate → Complete

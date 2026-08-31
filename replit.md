@@ -17,3 +17,16 @@ To run the two services manually:
 npm --prefix server start
 npm --prefix client run dev
 ```
+
+## Emergency donation demo
+
+Open `/emergency` (also available from the **Emergency** navigation link or
+the Hospital AI page) to run the shared emergency request flow. **Try demo
+scenario** creates a sample O+ platelet request and an eligible donor in the
+current prototype store. The hospital view can match and alert the donor; use
+the Donor dashboard tab to accept, start the simulated journey, and mark
+arrival. The hospital view then starts and completes the donation.
+
+Emergency lifecycle state is stored on the backend request and synchronized
+between the two views by polling. The prototype uses simulated ETA/location
+only; it does not collect continuous real-world location.

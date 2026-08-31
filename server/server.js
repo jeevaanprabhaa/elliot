@@ -8,6 +8,17 @@ app.use(express.json());
 // Temporary development storage. Data resets whenever the server restarts.
 const donors = [];
 const requests = [];
+const EMERGENCY_STATUSES = [
+  'CREATED',
+  'SEARCHING',
+  'DONOR_MATCHED',
+  'DONOR_ACCEPTED',
+  'DONOR_TRAVELLING',
+  'DONOR_ARRIVED',
+  'DONATION_IN_PROGRESS',
+  'COMPLETED',
+  'CANCELLED',
+];
 
 const createId = (prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 const now = () => new Date().toISOString();
@@ -42,6 +53,7 @@ const normaliseDonor = (data) => ({
   responseRate: Number.isFinite(Number(data.responseRate)) ? Number(data.responseRate) : undefined,
   successfulResponses: Number.isFinite(Number(data.successfulResponses)) ? Number(data.successfulResponses) : undefined,
   allowCall: Boolean(data.allowCall),
+  coordinates: data.coordinates || undefined,
   createdAt: now(),
   updatedAt: now(),
 });
@@ -58,7 +70,23 @@ const normaliseRequest = (data) => ({
   neededBy: asDate(data.neededBy),
   notes: data.notes || '',
   urgency: data.urgency || 'routine',
+  coordinates: data.coordinates || undefined,
   status: 'open',
+  requestType: data.requestType || 'standard',
+  emergencyStatus: data.requestType === 'emergency' ? (data.emergencyStatus || 'CREATED') : undefined,
+  matchedDonorId: data.matchedDonorId || null,
+  matchSnapshot: data.matchSnapshot || null,
+  distanceKm: toFiniteNumber(data.distanceKm),
+  etaMinutes: toFiniteNumber(data.etaMinutes),
+  alertSentAt: data.alertSentAt || null,
+  donorResponse: data.donorResponse || null,
+  donorResponseAt: data.donorResponseAt || null,
+  donorArrivedAt: data.donorArrivedAt || null,
+  donationStartedAt: data.donationStartedAt || null,
+  completedAt: data.completedAt || null,
+  timeline: data.requestType === 'emergency'
+    ? [{ status: data.emergencyStatus || 'CREATED', at: now() }]
+    : [],
   createdAt: now(),
   updatedAt: now(),
 });
@@ -373,7 +401,11 @@ const buildDonorMatches = (request) => {
         ],
       };
     })
-    .filter((match) => match.reasons.find((reason) => reason.key === 'compatible')?.passed && match.eligibility.eligibleNow)
+    .filter((match) => (
+      match.reasons.find((reason) => reason.key === 'compatible')?.passed
+      && match.eligibility.eligibleNow
+      && match.availability.availableAtRequest
+    ))
     .sort((a, b) => b.matchScore - a.matchScore || (a.distanceKm ?? 1e9) - (b.distanceKm ?? 1e9))
     .map((match, index) => ({ ...match, rank: index + 1 }));
 
@@ -415,6 +447,31 @@ const roundTo = (value, places = 1) => {
   const factor = 10 ** places;
   return Math.round(value * factor) / factor;
 };
+
+const getRequest = (id) => requests.find((request) => request._id === id);
+const isEmergencyRequest = (request) => request?.requestType === 'emergency';
+const estimateEtaMinutes = (distanceKm) => {
+  if (distanceKm === null || distanceKm === undefined) return 18;
+  return Math.max(6, Math.round((Number(distanceKm) * 3.5) + 7));
+};
+const addEmergencyTimelineEvent = (request, status) => {
+  if (!isEmergencyRequest(request)) return;
+  if (!Array.isArray(request.timeline)) request.timeline = [];
+  if (request.timeline[request.timeline.length - 1]?.status !== status) {
+    request.timeline.push({ status, at: now() });
+  }
+};
+const setEmergencyStatus = (request, status) => {
+  request.emergencyStatus = status;
+  request.updatedAt = now();
+  addEmergencyTimelineEvent(request, status);
+};
+const emergencyResponse = (request) => ({
+  ...request,
+  matchedDonor: request.matchedDonorId
+    ? donors.find((donor) => donor._id === request.matchedDonorId) || request.matchSnapshot?.donor || null
+    : null,
+});
 
 const getSeasonalProfile = () => {
   const month = new Date().getMonth();
@@ -568,6 +625,12 @@ app.get('/api/requests', (req, res) => {
   res.json(result);
 });
 
+app.get('/api/requests/:id', (req, res) => {
+  const request = getRequest(req.params.id);
+  if (!request) return res.status(404).json({ error: 'request not found' });
+  res.json(isEmergencyRequest(request) ? emergencyResponse(request) : request);
+});
+
 app.get('/api/requests/:id/matches', (req, res) => {
   const request = requests.find((item) => item._id === req.params.id);
   if (!request) return res.status(404).json({ error: 'request not found' });
@@ -624,7 +687,169 @@ app.post('/api/requests', (req, res) => {
 
   const request = normaliseRequest(data);
   requests.push(request);
-  res.status(201).json(request);
+  res.status(201).json(isEmergencyRequest(request) ? emergencyResponse(request) : request);
+});
+
+app.post('/api/requests/:id/emergency/match', (req, res) => {
+  const request = getRequest(req.params.id);
+  if (!request) return res.status(404).json({ error: 'request not found' });
+  if (!isEmergencyRequest(request)) return res.status(400).json({ error: 'request is not an emergency request' });
+  if (!['CREATED', 'SEARCHING', 'DONOR_MATCHED'].includes(request.emergencyStatus)) {
+    return res.status(409).json({ error: `cannot match a request in ${request.emergencyStatus} state` });
+  }
+
+  setEmergencyStatus(request, 'SEARCHING');
+  const matches = buildDonorMatches(request);
+  const selected = matches.find((match) => !req.body?.donorId || match.donor._id === req.body.donorId);
+  if (!selected) {
+    request.updatedAt = now();
+    return res.status(404).json({ error: 'no compatible, eligible, and available donor found', matches });
+  }
+
+  request.matchedDonorId = selected.donor._id;
+  request.matchSnapshot = selected;
+  request.distanceKm = selected.distanceKm;
+  request.etaMinutes = estimateEtaMinutes(selected.distanceKm);
+  setEmergencyStatus(request, 'DONOR_MATCHED');
+  res.json({ request: emergencyResponse(request), match: selected, matches });
+});
+
+app.post('/api/requests/:id/emergency/alert', (req, res) => {
+  const request = getRequest(req.params.id);
+  if (!request) return res.status(404).json({ error: 'request not found' });
+  if (!isEmergencyRequest(request) || request.emergencyStatus !== 'DONOR_MATCHED' || !request.matchedDonorId) {
+    return res.status(409).json({ error: 'match a donor before sending an emergency alert' });
+  }
+
+  request.alertSentAt = now();
+  request.updatedAt = now();
+  res.json(emergencyResponse(request));
+});
+
+app.get('/api/donors/:id/emergency-alerts', (req, res) => {
+  const alerts = requests
+    .filter((request) => isEmergencyRequest(request) && request.matchedDonorId === req.params.id)
+    .filter((request) => !['COMPLETED', 'CANCELLED'].includes(request.emergencyStatus))
+    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+    .map(emergencyResponse);
+  res.json(alerts);
+});
+
+app.post('/api/requests/:id/emergency/respond', (req, res) => {
+  const request = getRequest(req.params.id);
+  if (!request) return res.status(404).json({ error: 'request not found' });
+  if (!isEmergencyRequest(request) || !request.alertSentAt) {
+    return res.status(409).json({ error: 'emergency alert has not been sent' });
+  }
+  if (req.body?.donorId && req.body.donorId !== request.matchedDonorId) {
+    return res.status(403).json({ error: 'donor is not the matched recipient of this alert' });
+  }
+  if (!['accept', 'decline'].includes(req.body?.action)) {
+    return res.status(400).json({ error: 'action must be accept or decline' });
+  }
+  if (request.emergencyStatus !== 'DONOR_MATCHED') {
+    return res.status(409).json({ error: `request is already ${request.emergencyStatus}` });
+  }
+
+  request.donorResponse = req.body.action === 'accept' ? 'accepted' : 'declined';
+  request.donorResponseAt = now();
+  const donor = donors.find((item) => item._id === request.matchedDonorId);
+  if (donor) {
+    donor.responseHistory = Array.isArray(donor.responseHistory) ? donor.responseHistory : [];
+    donor.responseHistory.push({
+      requestId: request._id,
+      responded: true,
+      accepted: req.body.action === 'accept',
+      status: req.body.action === 'accept' ? 'accepted' : 'declined',
+      at: request.donorResponseAt,
+    });
+    donor.updatedAt = now();
+  }
+
+  setEmergencyStatus(request, req.body.action === 'accept' ? 'DONOR_ACCEPTED' : 'CANCELLED');
+  res.json(emergencyResponse(request));
+});
+
+app.post('/api/requests/:id/emergency/status', (req, res) => {
+  const request = getRequest(req.params.id);
+  if (!request) return res.status(404).json({ error: 'request not found' });
+  if (!isEmergencyRequest(request)) return res.status(400).json({ error: 'request is not an emergency request' });
+  if (req.body?.donorId && req.body.donorId !== request.matchedDonorId) {
+    return res.status(403).json({ error: 'donor is not assigned to this request' });
+  }
+
+  const nextStatusByAction = {
+    start_journey: { from: ['DONOR_ACCEPTED'], to: 'DONOR_TRAVELLING' },
+    arrived: { from: ['DONOR_TRAVELLING'], to: 'DONOR_ARRIVED' },
+    start_donation: { from: ['DONOR_ARRIVED'], to: 'DONATION_IN_PROGRESS' },
+    complete: { from: ['DONATION_IN_PROGRESS'], to: 'COMPLETED' },
+  };
+  const transition = nextStatusByAction[req.body?.action];
+  if (!transition) return res.status(400).json({ error: 'action must be start_journey, arrived, start_donation, or complete' });
+  if (!transition.from.includes(request.emergencyStatus)) {
+    return res.status(409).json({ error: `cannot ${req.body.action} while request is ${request.emergencyStatus}` });
+  }
+
+  if (transition.to === 'DONOR_ARRIVED') request.donorArrivedAt = now();
+  if (transition.to === 'DONATION_IN_PROGRESS') request.donationStartedAt = now();
+  if (transition.to === 'COMPLETED') {
+    request.completedAt = now();
+    request.status = 'fulfilled';
+    const donor = donors.find((item) => item._id === request.matchedDonorId);
+    if (donor) {
+      donor.donationHistory = Array.isArray(donor.donationHistory) ? donor.donationHistory : [];
+      donor.donationHistory.push({
+        date: request.completedAt,
+        location: request.hospital,
+        notes: `Emergency ${request.componentType === 'platelets' ? 'platelet' : 'whole blood'} donation · ${request.units} unit(s)`,
+        requestId: request._id,
+        componentType: request.componentType,
+        units: request.units,
+      });
+      donor.lastDonatedAt = request.completedAt;
+      donor.updatedAt = now();
+    }
+    const inventoryItem = ELLIOT_DEMO_INVENTORY.find(
+      (item) => item.bloodGroup === request.bloodGroup && item.componentType === request.componentType,
+    );
+    if (inventoryItem) inventoryItem.unitsAvailable += request.units;
+    request.inventoryUpdated = Boolean(inventoryItem);
+  }
+
+  setEmergencyStatus(request, transition.to);
+  res.json(emergencyResponse(request));
+});
+
+app.post('/api/demo/emergency', (req, res) => {
+  let donor = donors.find((item) => item.phone === '919812345678');
+  if (!donor) {
+    donor = normaliseDonor({
+      name: 'Rohit Verma',
+      phone: '919812345678',
+      bloodGroup: 'O+',
+      city: 'Mumbai',
+      availability: 'Available',
+      allowCall: false,
+      coordinates: { lat: 19.0586, lng: 72.8656 },
+    });
+    donors.push(donor);
+  }
+
+  const request = normaliseRequest({
+    patientName: 'Demo patient',
+    bloodGroup: 'O+',
+    componentType: 'platelets',
+    city: 'Mumbai',
+    hospital: 'City Care Hospital',
+    units: 2,
+    contactPhone: '919876543210',
+    neededBy: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+    urgency: 'critical',
+    requestType: 'emergency',
+    coordinates: { lat: 19.076, lng: 72.8777 },
+  });
+  requests.push(request);
+  res.status(201).json({ request: emergencyResponse(request), donor });
 });
 
 app.put('/api/requests/:id', (req, res) => {
@@ -632,7 +857,7 @@ app.put('/api/requests/:id', (req, res) => {
   if (!request) return res.status(404).json({ error: 'not found' });
 
   Object.assign(request, req.body, { updatedAt: now() });
-  res.json(request);
+  res.json(isEmergencyRequest(request) ? emergencyResponse(request) : request);
 });
 
 const PORT = process.env.PORT || 5001;

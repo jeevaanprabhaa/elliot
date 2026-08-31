@@ -5,6 +5,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Older cached Vercel bundles could resolve an unset API base URL to
+// "/undefined/api/...". Normalize that legacy path so open tabs can still
+// register donors while they receive the refreshed client bundle.
+app.use((req, res, next) => {
+  const normalizedUrl = req.url.replace(/^\/undefined(?=\/api(?:\/|$))/, '');
+  if (normalizedUrl !== req.url) req.url = normalizedUrl;
+  next();
+});
+
 // Temporary development storage. Data resets whenever the server restarts.
 const donors = [];
 const requests = [];

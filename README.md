@@ -145,6 +145,60 @@ npm run dev
 
 ---
 
+## ▲ Deploy Elliot on Vercel
+
+This repository is configured as one Vercel project. The React/Vite client is
+built from `client/`, and the existing Express API is exposed through the
+serverless entry point at `api/index.js`.
+
+### Vercel dashboard settings
+
+When importing `jeevaanprabhaa/elliot` into Vercel, use:
+
+| Setting | Value |
+| --- | --- |
+| Root Directory | `.` |
+| Framework Preset | `Vite` (or `Other`) |
+| Install Command | `npm run vercel-install` |
+| Build Command | `npm run vercel-build` |
+| Output Directory | `client/dist` |
+| Node.js Version | `20.x` |
+
+No `VITE_API_URL` value is required for the combined deployment. The client
+uses same-origin `/api` requests, and `vercel.json` routes those requests to
+the Express function.
+
+### Vercel CLI
+
+```bash
+npm install --global vercel
+vercel login
+vercel link
+vercel --prod
+```
+
+Run these commands from the repository root. The production build command is:
+
+```bash
+npm run vercel-build
+```
+
+The matching dependency install command is:
+
+```bash
+npm run vercel-install
+```
+
+### Production storage note
+
+The imported app currently uses temporary in-memory storage. This works for
+the prototype API, but Vercel serverless instances are not a durable database:
+donors, requests, and emergency lifecycle state can reset or differ between
+instances. Connect persistent storage before using Elliot with real donor or
+hospital records.
+
+---
+
 ## 🧠 Future Enhancements
 
 * 📍 Integrate Google Maps for nearby donor search

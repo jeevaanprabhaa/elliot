@@ -860,7 +860,11 @@ app.put('/api/requests/:id', (req, res) => {
   res.json(isEmergencyRequest(request) ? emergencyResponse(request) : request);
 });
 
-const PORT = process.env.PORT || 5001;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`server running on port ${PORT} with in-memory storage`);
-});
+if (require.main === module) {
+  const PORT = process.env.PORT || 5001;
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`server running on port ${PORT} with in-memory storage`);
+  });
+}
+
+module.exports = app;

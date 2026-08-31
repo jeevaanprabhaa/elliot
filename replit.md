@@ -30,3 +30,27 @@ arrival. The hospital view then starts and completes the donation.
 Emergency lifecycle state is stored on the backend request and synchronized
 between the two views by polling. The prototype uses simulated ETA/location
 only; it does not collect continuous real-world location.
+
+## Vercel deployment
+
+The repository includes `vercel.json` and `api/index.js` for a combined Vercel
+deployment. Configure the Vercel project with:
+
+- Root Directory: `.`
+- Install Command: `npm run vercel-install`
+- Build Command: `npm run vercel-build`
+- Output Directory: `client/dist`
+- Node.js: `20.x`
+
+`VITE_API_URL` can remain unset because the deployed client uses same-origin
+`/api` requests. From the repository root, the CLI flow is:
+
+```bash
+npm install --global vercel
+vercel login
+vercel link
+vercel --prod
+```
+
+The current API uses in-memory storage, which is not durable across Vercel
+serverless instances. Add persistent storage before production use.

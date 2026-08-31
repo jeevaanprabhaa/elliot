@@ -1,4 +1,11 @@
 {
+  "name": "elliot",
+  "private": true,
+  "scripts": {
+    "build": "npm run build --prefix client",
+    "vercel-install": "npm ci --prefix server && npm ci --prefix client",
+    "vercel-build": "npm run build --prefix client"
+  },
   "dependencies": {
     "leaflet": "^1.9.4",
     "react-leaflet": "^5.0.0"

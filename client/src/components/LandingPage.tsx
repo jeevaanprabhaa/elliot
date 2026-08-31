@@ -26,7 +26,7 @@ const stories = [
     role: "Community member",
   },
   {
-    quote: "BloodConnect makes helping feel personal, safe, and immediate.",
+    quote: "Elliot makes helping feel personal, safe, and immediate.",
     name: "Sana Khan",
     role: "Volunteer",
   },
@@ -361,7 +361,7 @@ function LandingPage() {
               <span className="bc-brand-mark">
                 <FaHeart />
               </span>
-              BloodConnect
+              Elliot
             </div>
             <p className="mt-4 max-w-xs text-sm leading-6 text-rose-100/70">
               Connecting donors and recipients with speed, care, and trust.
@@ -375,13 +375,13 @@ function LandingPage() {
           </div>
           <div>
             <h3>Get in touch</h3>
-            <a href="mailto:support@bloodconnect.org">support@bloodconnect.org</a>
+            <a href="mailto:support@elliot.org">support@elliot.org</a>
             <a href="tel:+919876543210">+91 98765 43210</a>
             <span>Bengaluru, India</span>
           </div>
         </div>
         <div className="border-t border-white/10 py-5 text-center text-xs text-rose-100/50">
-          © 2025 BloodConnect. Every drop counts.
+          © 2025 Elliot. Every drop counts.
         </div>
       </footer>
     </main>

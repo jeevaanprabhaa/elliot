@@ -1,10 +1,10 @@
 
 <!--
-  BloodConnect - README
+  Elliot - README
   Enhanced for Winter of Code Social 2025: banner, badges, setup clarity, contributor focus.
 -->
 
-# 🩸 BloodConnect
+# 🩸 Elliot
 
 A full-stack Blood Donation and Request Management System built with Express, React, and Node.
 This project is part of **Winter of Code Social 2025**, promoting open-source collaboration for social good.
@@ -13,7 +13,7 @@ This project is part of **Winter of Code Social 2025**, promoting open-source co
 
 <div align="center">
   <!-- Red banner -->
-  <img src="https://img.shields.io/badge/MERN-BloodConnect-%23d62828?style=for-the-badge&logo=appveyor" alt="BloodConnect Banner" />
+  <img src="https://img.shields.io/badge/MERN-Elliot-%23d62828?style=for-the-badge&logo=appveyor" alt="Elliot Banner" />
 
   <br>
 
@@ -34,7 +34,7 @@ This project is part of **Winter of Code Social 2025**, promoting open-source co
 
 ## 🌍 About the Project
 
-**BloodConnect** is a social good project designed to make blood donation more accessible, transparent, and efficient.  
+**Elliot** is a social good project designed to make blood donation more accessible, transparent, and efficient.
 By connecting **donors** and **recipients** in real time, the platform helps bridge the gap between blood demand and availability.
 
 This project was initiated as part of **Winter of Code Social 2025**, with the aim of using technology to serve society.  
@@ -56,7 +56,7 @@ It provides a practical solution to one of the most critical healthcare challeng
 ## 💡 Motivation
 
 Every year, thousands of people struggle to find blood donors in emergencies.  
-**BloodConnect** aims to solve this by building a digital bridge between **donors and recipients**, reducing search time and increasing the reach of blood donation drives.  
+**Elliot** aims to solve this by building a digital bridge between **donors and recipients**, reducing search time and increasing the reach of blood donation drives.
 
 This project aligns with the **Winter of Code Social** mission — *using open source to create real social impact*.
 
@@ -87,7 +87,7 @@ This project aligns with the **Winter of Code Social** mission — *using open s
 
 ```bash
 git clone https://github.com/darshan-totagi/blood-donation.git
-cd BloodConnect
+cd blood-donation
 ````
 
 ---

@@ -1,4 +1,4 @@
-# BloodConnect on Replit
+# Elliot on Replit
 
 ## Development setup
 

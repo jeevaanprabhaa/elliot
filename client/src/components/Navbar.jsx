@@ -50,12 +50,12 @@ function Navbar() {
   return (
     <nav className="bc-navbar">
       <div className="bc-navbar-inner">
-        <button className="bc-brand" onClick={() => handleNavigation("home")} aria-label="BloodConnect home">
+        <button className="bc-brand" onClick={() => handleNavigation("home")} aria-label="Elliot home">
           <span className="bc-brand-mark">
             <FaHeart />
           </span>
           <span>
-            Blood<span>Connect</span>
+            Elliot
           </span>
         </button>
 

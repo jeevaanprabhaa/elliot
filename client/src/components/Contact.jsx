@@ -164,7 +164,7 @@ export default function Contact() {
           <h3 className="text-2xl font-bold text-rose-700 dark:text-rose-300">Reach Us</h3>
           <div className="space-y-3 text-zinc-700 dark:text-zinc-300">
             <div className="flex items-center gap-3"><FiPhone className="w-5 h-5 text-rose-600 dark:text-rose-400" /><span>+91 98765 43210</span></div>
-            <div className="flex items-center gap-3"><FiMail className="w-5 h-5 text-rose-600 dark:text-rose-400" /><span>support@bloodconnect.org</span></div>
+            <div className="flex items-center gap-3"><FiMail className="w-5 h-5 text-rose-600 dark:text-rose-400" /><span>support@elliot.org</span></div>
             <div className="flex items-center gap-3"><FiMapPin className="w-5 h-5 text-rose-600 dark:text-rose-400" /><span>123, Red Cross Street, Bengaluru</span></div>
           </div>
 
@@ -197,7 +197,7 @@ export default function Contact() {
           </div>
 
           <div className="rounded-2xl overflow-hidden border dark:border-zinc-800">
-            <iframe title="BloodConnect HQ" src="https://maps.google.com/maps?q=Bengaluru&z=12&output=embed" className="w-full h-56" />
+            <iframe title="Elliot HQ" src="https://maps.google.com/maps?q=Bengaluru&z=12&output=embed" className="w-full h-56" />
           </div>
           <div className="text-xs text-zinc-500 dark:text-zinc-400">Mon–Fri 9:00–18:00 IST</div>
         </div>

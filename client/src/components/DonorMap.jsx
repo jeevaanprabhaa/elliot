@@ -31,7 +31,7 @@ const createBloodGroupIcon = (bloodGroup) => {
   });
 };
 
-const API_URL = `${import.meta.env.VITE_API_URL}/api/donors`;
+const API_URL = `${import.meta.env.VITE_API_URL || ""}/api/donors`;
 const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 // City coordinates (extended)

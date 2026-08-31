@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FiPhone, FiX, FiMapPin, FiDroplet, FiUser, FiClock, FiEdit2, FiCopy, FiTarget, FiCheck, FiAlertCircle, FiMessageCircle, FiDownload, FiSend, FiPrinter } from "react-icons/fi";
+import { FiPhone, FiX, FiMapPin, FiDroplet, FiUser, FiClock, FiEdit2, FiCopy, FiTarget, FiCheck, FiAlertCircle, FiMessageCircle, FiDownload, FiSend, FiPrinter, FiShare2, FiStar } from "react-icons/fi";
 
 const API_URL = `${import.meta.env.VITE_API_URL || ""}/api/donors`;
 const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
